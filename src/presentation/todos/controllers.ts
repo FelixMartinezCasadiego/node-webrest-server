@@ -10,7 +10,7 @@ export class TodosController {
   //* DI
   constructor() {}
 
-  public getTodos = (req: Request, res: Response) => {
+  public getTodos = (_req: Request, res: Response) => {
     return res.json(todos);
   };
 
@@ -25,5 +25,17 @@ export class TodosController {
     todo
       ? res.json(todo)
       : res.status(404).json({ error: `TODO with id ${id} not found` });
+  };
+
+  public createTodo = (req: Request, res: Response) => {
+    const { text } = req.body;
+
+    if (typeof text !== "string")
+      return res.status(400).json({ error: "Text property is required" });
+
+    const newTodo = { id: todos.length + 1, text: text, created: null };
+    todos.push(newTodo);
+
+    res.json(newTodo);
   };
 }
