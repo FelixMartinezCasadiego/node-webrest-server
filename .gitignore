@@ -4,5 +4,6 @@ node_modules/
 keys/
 .env
 .qodo
+dist/
  
 /postgres/
