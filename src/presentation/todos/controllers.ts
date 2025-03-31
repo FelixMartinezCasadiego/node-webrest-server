@@ -1,38 +1,46 @@
 import { Request, Response } from "express";
 
+/* domain */
 import { CreateTodoDto } from "../../domain/dtos/todos/create-todo.dto";
 import { UpdateTodoDto } from "../../domain/dtos/todos/update-todo.dto";
 import { TodoRepository } from "../../domain/entities/todo.repository";
+
+/* use cases */
+import { GetTodos } from "../../use-cases/todo/get-todos";
+import { GetTodo } from "../../use-cases/todo/get-todo";
+import { CreateTodo } from "../../use-cases/todo/create-todo";
+import { UpdateTodo } from "../../use-cases/todo/update-todo";
+import { DeleteTodo } from "../../use-cases/todo/delete-todo";
 
 export class TodosController {
   //* DI
   constructor(private readonly todoRepository: TodoRepository) {}
 
   public getTodos = async (_req: Request, res: Response) => {
-    const todos = await this.todoRepository.getAll();
-
-    return res.json(todos);
+    new GetTodos(this.todoRepository)
+      .execute()
+      .then((todos) => res.json(todos))
+      .catch((error) => res.status(400).json({ error }));
   };
 
   public getTodoById = async (req: Request, res: Response) => {
     //* convert id in number with +
     const id = +req.params.id;
 
-    try {
-      const todo = await this.todoRepository.findById(id);
-      res.json(todo);
-    } catch (error) {
-      res.status(400).json({ error });
-    }
+    new GetTodo(this.todoRepository)
+      .execute(id)
+      .then((todo) => res.json(todo))
+      .catch((error) => res.status(400).json({ error }));
   };
 
   public createTodo = async (req: Request, res: Response) => {
     const [error, createTodoDto] = CreateTodoDto.create(req.body);
     if (error) return res.status(400).json({ error });
 
-    const todo = await this.todoRepository.create(createTodoDto!);
-
-    res.json(todo);
+    new CreateTodo(this.todoRepository)
+      .execute(createTodoDto!)
+      .then((todo) => res.json(todo))
+      .catch((error) => res.status(400).json({ error }));
   };
 
   public updateTodo = async (req: Request, res: Response) => {
@@ -41,15 +49,18 @@ export class TodosController {
 
     if (error) return res.status(400).json({ error });
 
-    const updatedTodoDto = await this.todoRepository.updateById(updateTodoDto!);
-
-    return res.json(updatedTodoDto);
+    new UpdateTodo(this.todoRepository)
+      .execute(updateTodoDto!)
+      .then((updatedTodoDto) => res.json(updatedTodoDto))
+      .catch((error) => res.status(400).json({ error }));
   };
 
   public deleteTodo = async (req: Request, res: Response) => {
     const id = +req.params.id;
 
-    const deletedTodo = await this.todoRepository.deleteById(id);
-    res.json(deletedTodo);
+    new DeleteTodo(this.todoRepository)
+      .execute(id)
+      .then((todo) => res.json({ todo }))
+      .catch((error) => res.status(400).json({ error }));
   };
 }
